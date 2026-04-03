@@ -97,39 +97,39 @@ Results for all 7 user profiles, 3 standard and 4 adversarial edge cases.
 
 #### Profile 1: High-Energy Pop
 
-![High-Energy Pop profile results](images/edgecase1.png)
+![High-Energy Pop profile results](images/edgecase7.png)
 
 #### Profile 2: Chill Lofi
 
-![Chill Lofi profile results](images/edgecase2.png)
+![Chill Lofi profile results](images/edgecase1.png)
 
 #### Profile 3: Deep Intense Rock
 
-![Deep Intense Rock profile results](images/edgecase3.png)
+![Deep Intense Rock profile results](images/edgecase2.png)
 
 #### Profile 4: Conflicting Preferences (High Energy + Melancholic Mood)
 
 Genre match (0.35) outweighs energy mismatch. A slow sad song ranks above fast intense ones because the genre label earns a guaranteed bonus that audio features cannot overcome.
 
-![Conflicting high energy + melancholic mood profile results](images/edgecase4.png)
+![Conflicting high energy + melancholic mood profile results](images/edgecase3.png)
 
 #### Profile 5: Ghost Genre (Genre Not in Catalog)
 
 `k-pop` never matches anything. All scores cluster around 0.64 with no dominant winner. The system falls back to mood and energy but produces undifferentiated results with no clear recommendation.
 
-![Ghost genre k-pop profile results](images/edgecase5.png)
+![Ghost genre k-pop profile results](images/edgecase4.png)
 
 #### Profile 6: Extremes (Maximum Acoustic + Peaceful Ambient)
 
 `mood=peaceful` has no exact catalog match, so the mood weight (0.30) is never awarded to any song. Genre and acousticness carry the results instead, surfacing songs that feel adjacent but not ideal.
 
-![Extremes maximum acoustic peaceful ambient profile results](images/edgecase6.png)
+![Extremes maximum acoustic peaceful ambient profile results](images/edgecase5.png)
 
 #### Profile 7: Contradictory Preferences (Likes Acoustic + Metal Genre)
 
 Metal songs have acousticness of 0.02 to 0.04, so `likes_acoustic=True` silently penalizes every genre match. The top score is 0.933 instead of a potential 0.985, and the system does not flag the contradiction.
 
-![Contradictory acoustic metal profile results](images/edgecase7.png)
+![Contradictory acoustic metal profile results](images/edgecase6.png)
 
 ### Known Biases in This Design
 
