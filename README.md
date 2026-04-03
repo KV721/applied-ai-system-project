@@ -17,17 +17,104 @@ Replace this paragraph with your own summary of what your version does.
 
 ## How The System Works
 
-Explain your design in plain language.
+Real-world recommenders like Spotify combine two strategies: collaborative filtering, which finds users with similar listening habits and borrows their taste, and content-based filtering, which analyzes the actual attributes of a song, its energy, mood, tempo, and genre, to find tracks that match what a user already enjoys. At scale, these systems process billions of signals (skips, saves, repeat plays) and use neural networks to surface personalized results. Our simulation focuses on the content-based side: we represent each song as a structured set of audio features and each user as a taste profile, then compute a weighted similarity score to rank songs. Rather than learning from behavior over time, our version prioritizes transparency, i.e every recommendation comes with a plain-language explanation of exactly why that song was chosen.
 
-Some prompts to answer:
+### Song Features
 
-- What features does each `Song` use in your system
-  - For example: genre, mood, energy, tempo
-- What information does your `UserProfile` store
-- How does your `Recommender` compute a score for each song
-- How do you choose which songs to recommend
+Each `Song` object captures the following attributes from `data/songs.csv`:
 
-You can include a simple diagram or bullet list if helpful.
+| Feature | Type | Description |
+|---|---|---|
+| `id` | int | Unique identifier |
+| `title` | str | Song title |
+| `artist` | str | Artist name |
+| `genre` | str | Broad category (e.g. lofi, pop, rock, ambient, jazz, synthwave, indie pop) |
+| `mood` | str | Emotional tone (e.g. happy, chill, intense, focused, relaxed, moody) |
+| `energy` | float (0–1) | Intensity and activity level — low for ambient, high for gym tracks |
+| `tempo_bpm` | float | Beats per minute — speed of the track |
+| `valence` | float (0–1) | Musical positivity — high = cheerful, low = melancholic or tense |
+| `danceability` | float (0–1) | How suitable the track is for dancing based on rhythm and beat strength |
+| `acousticness` | float (0–1) | Likelihood the track is acoustic rather than electronic or produced |
+
+### UserProfile Features
+
+Each `UserProfile` stores the user's listening preferences used for scoring:
+
+| Field | Type | Description |
+|---|---|---|
+| `favorite_genre` | str | The genre the user most wants to hear |
+| `favorite_mood` | str | The mood the user is in or prefers |
+| `target_energy` | float (0–1) | The energy level that fits the user's current context (e.g. 0.9 for a workout, 0.3 for studying) |
+| `likes_acoustic` | bool | Whether the user prefers acoustic/organic textures over electronic production |
+
+### How Scoring Works
+
+For each song, the recommender computes a score using weighted feature matching:
+
+```
+score = genre_match  × 0.35   (exact match)
+      + mood_match   × 0.30   (exact match)
+      + energy_fit   × 0.20   (1 - |target_energy - song.energy|)
+      + valence_fit  × 0.10   (inferred from mood preference)
+      + acoustic_fit × 0.05   (boost if likes_acoustic and acousticness > 0.6)
+```
+
+Songs are then ranked by score and the top `k` are returned, each paired with a human-readable explanation of which features drove the match.
+
+### Pipeline Diagram
+
+The flowchart below traces how a single song travels from the CSV file to a position in the final ranked list:
+
+```mermaid
+flowchart TD
+    A[("data/songs.csv")]:::data
+    B["load_songs(csv_path)\nsrc/recommender.py"]:::fn
+    C["List of Song objects\n(id, title, artist, genre, mood,\nenergy, tempo_bpm, valence,\ndanceability, acousticness)"]:::obj
+    D["UserProfile\n(favorite_genre, favorite_mood,\ntarget_energy, likes_acoustic)"]:::obj
+    E{"For each Song\nin catalog"}:::loop
+    F["score_song(user, song)\n\ngenre_match  × 0.35\nmood_match   × 0.30\nenergy_fit   × 0.20\nvalence_fit  × 0.10\nacoustic_fit × 0.05"]:::fn
+    G["(Song, score, explanation)\ne.g. Storm Runner · 0.91\n'Matches genre rock, mood intense'"]:::obj
+    H["recommend_songs(user, songs, k)\nCollect all scored pairs\nSort descending by score\nSlice top k"]:::fn
+    I["Final Ranked List\n[('Storm Runner', 0.91, ...),\n('Tidal Wave', 0.87, ...),\n('Gym Hero', 0.74, ...)]"]:::out
+
+    A --> B
+    B --> C
+    C --> E
+    D --> E
+    E --> F
+    F --> G
+    G -->|"repeat for\nevery song"| E
+    G --> H
+    H --> I
+
+    classDef data fill:#f5f0e8,stroke:#b8a87a
+    classDef fn fill:#e8f0fb,stroke:#7a9bc4
+    classDef obj fill:#edf7ed,stroke:#7ab87a
+    classDef loop fill:#fdf3e8,stroke:#c49a7a
+    classDef out fill:#fdedf5,stroke:#c47ab8
+```
+
+### Sample Output
+
+Terminal output for a `pop / happy` user profile (energy 0.78):
+
+![Sample terminal output showing top 5 recommendations for a pop/happy user profile](images/sampleoutput.png)
+
+### Known Biases in This Design
+
+The weight distribution and exact-match logic introduce several predictable failure modes:
+
+- **Genre over-prioritization.** Genre carries 35% of the score as a binary match — a perfect-mood, perfect-energy song in a neighboring genre (e.g. `indie rock` when the user wants `rock`) scores no higher than a completely mismatched song that happens to share the genre label. Great songs get buried purely because of a categorical boundary.
+
+- **Mood label brittleness.** Mood is also a 30% binary match. `melancholic` and `dark` are emotionally close, but the system treats them as completely different, same as `melancholic` vs. `energetic`. Two users in a similar emotional state get different results if they use different words.
+
+- **Genre and mood dominate together.** When both match, a song already has 65% of its maximum score before any audio features are considered. A song with the right genre and mood but wrong energy will almost always outrank a song with perfect energy but a different genre — even if the latter would actually feel like a better fit.
+
+- **No diversity enforcement.** The ranking step is a pure sort. If five lofi songs all score similarly, all five appear in the top-k. A real system would re-rank for variety to avoid repetitive results.
+
+- **UserProfile has no valence field.** Valence (positivity/sadness) is inferred indirectly from mood, which means two users with the same `favorite_mood` but different emotional nuances (one wants melancholic, one wants bittersweet) receive identical valence scoring.
+
+- **Catalog skew.** The dataset has 5 lofi/ambient/folk songs clustered at low energy and only 3 high-energy songs. A user who prefers high-energy genres has fewer meaningful candidates, and the ranking will surface lower-quality matches simply because competition is thinner at that end of the energy axis.
 
 ---
 
