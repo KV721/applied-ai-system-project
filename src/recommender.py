@@ -119,7 +119,7 @@ def _score_song(user: Dict, song: Dict) -> Tuple[Dict, float, str]:
     Scores a single song against a user profile.
     Returns (song, score, explanation).
 
-    Weights:
+    Weights (total = 1.0):
       genre_match   0.35  — binary exact match
       mood_match    0.30  — binary exact match
       energy_fit    0.20  — proximity: 1 - |target - song|

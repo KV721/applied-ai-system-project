@@ -33,19 +33,71 @@ def print_recommendations(recommendations, user_prefs: dict, k: int) -> None:
     print()
 
 
-def main() -> None:
-    songs = load_songs("data/songs.csv")
-
-    user_prefs = {
+PROFILES = [
+    # --- Standard profiles ---
+    {
+        "label":          "High-Energy Pop",
         "genre":          "pop",
         "mood":           "happy",
-        "energy":         0.78,
+        "energy":         0.85,
         "likes_acoustic": False,
-    }
+    },
+    {
+        "label":          "Chill Lofi",
+        "genre":          "lofi",
+        "mood":           "chill",
+        "energy":         0.38,
+        "likes_acoustic": True,
+    },
+    {
+        "label":          "Deep Intense Rock",
+        "genre":          "rock",
+        "mood":           "intense",
+        "energy":         0.90,
+        "likes_acoustic": False,
+    },
+    # --- Adversarial / edge case profiles ---
+    {
+        "label":          "Conflicting: High Energy + Melancholic Mood",
+        "genre":          "alternative",
+        "mood":           "melancholic",
+        "energy":         0.92,
+        "likes_acoustic": False,
+    },
+    {
+        "label":          "Ghost Genre: Genre Not in Catalog",
+        "genre":          "k-pop",
+        "mood":           "happy",
+        "energy":         0.80,
+        "likes_acoustic": False,
+    },
+    {
+        "label":          "Extremes: Maximum Acoustic + Peaceful Ambient",
+        "genre":          "ambient",
+        "mood":           "peaceful",
+        "energy":         0.15,
+        "likes_acoustic": True,
+    },
+    {
+        "label":          "Contradictory Acoustic: Likes Acoustic + Metal Genre",
+        "genre":          "metal",
+        "mood":           "intense",
+        "energy":         0.95,
+        "likes_acoustic": True,
+    },
+]
 
+
+def main() -> None:
+    songs = load_songs("data/songs.csv")
     k = 5
-    recommendations = recommend_songs(user_prefs, songs, k=k)
-    print_recommendations(recommendations, user_prefs, k)
+    for profile in PROFILES:
+        user_prefs = {k: v for k, v in profile.items() if k != "label"}
+        label = profile["label"]
+        print(f"\n{'#' * 60}")
+        print(f"  PROFILE: {label}")
+        recommendations = recommend_songs(user_prefs, songs, k=k)
+        print_recommendations(recommendations, user_prefs, k)
 
 
 if __name__ == "__main__":
