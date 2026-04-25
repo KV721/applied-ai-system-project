@@ -13,3 +13,12 @@ venv/
 
 # Pytest cache
 .pytest_cache/
+
+# Environment secrets
+.env
+
+# Runtime logs
+logs/
+
+# Precomputed embeddings (regenerable)
+data/embeddings.pkl

@@ -1,0 +1,38 @@
+{
+  "preference_responses": [
+    {
+      "input": "chill telugu songs for studying",
+      "output": "{\"languages\": [\"telugu\"], \"language_strict\": false, \"mood_descriptors\": [\"chill\"], \"energy_hint\": 0.35, \"context\": \"studying\"}"
+    },
+    {
+      "input": "only hindi romantic songs",
+      "output": "{\"languages\": [\"hindi\"], \"language_strict\": true, \"mood_descriptors\": [\"romantic\"], \"energy_hint\": 0.25, \"context\": null}"
+    },
+    {
+      "input": "something upbeat and energetic",
+      "output": "{\"languages\": [], \"language_strict\": false, \"mood_descriptors\": [\"upbeat\", \"energetic\"], \"energy_hint\": 0.85, \"context\": null}"
+    },
+    {
+      "input": "sad english songs for late night drives",
+      "output": "{\"languages\": [\"english\"], \"language_strict\": false, \"mood_descriptors\": [\"sad\", \"melancholic\"], \"energy_hint\": 0.2, \"context\": \"late night drives\"}"
+    },
+    {
+      "input": "something I can dance to at a party",
+      "output": "{\"languages\": [], \"language_strict\": false, \"mood_descriptors\": [\"dance\", \"party\", \"energetic\"], \"energy_hint\": 0.9, \"context\": \"party\"}"
+    }
+  ],
+  "refinement_responses": [
+    {
+      "input": "not the first one, I want something more acoustic",
+      "output": "{\"excluded_song_ids\": [1], \"emphasis\": {\"acousticness\": 0.8}, \"languages\": null, \"language_strict\": null, \"mood_descriptors\": null, \"energy_hint\": null, \"context\": null}"
+    },
+    {
+      "input": "all too slow, something more energetic, English only",
+      "output": "{\"excluded_song_ids\": [1, 2, 3, 4, 5], \"emphasis\": {\"energy\": 0.85}, \"languages\": [\"english\"], \"language_strict\": true, \"mood_descriptors\": null, \"energy_hint\": 0.85, \"context\": null}"
+    },
+    {
+      "input": "show me something happier",
+      "output": "{\"excluded_song_ids\": [], \"emphasis\": {\"valence\": 0.8}, \"languages\": null, \"language_strict\": null, \"mood_descriptors\": [\"happy\", \"upbeat\"], \"energy_hint\": null, \"context\": null}"
+    }
+  ]
+}

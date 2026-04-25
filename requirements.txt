@@ -1,3 +1,6 @@
-pandas
+google-genai
+sentence-transformers
+numpy
+python-dotenv
+pydantic
 pytest
-streamlit

@@ -1,0 +1,7 @@
+id,title,artist,language,genre,mood_tags,energy,tempo_bpm,valence,danceability,acousticness,year,description
+1,Test Song Telugu,Artist A,telugu,telugu film,melodic;romantic,0.65,110,0.70,0.68,0.45,2020,A warm melodic track with a romantic feel suited for evening listening.
+2,Test Song Hindi,Artist B,hindi,hindi indie,chill;introspective,0.42,88,0.55,0.50,0.72,2019,A gentle indie track with acoustic textures ideal for quiet study sessions.
+3,Test Song English,Artist C,english,english indie pop,upbeat;happy,0.80,124,0.82,0.78,0.20,2021,A bright upbeat pop track with energetic production and a feel-good vibe.
+4,Test Calm Telugu,Artist D,telugu,telugu classical,peaceful;meditative,0.25,68,0.60,0.30,0.90,2018,A slow meditative piece built on classical Telugu forms with sparse instrumentation.
+5,Test Dance Hindi,Artist E,hindi,hindi pop,energetic;dance,0.88,132,0.78,0.91,0.08,2022,A high-energy Hindi pop track designed for the dance floor with punchy beats.
+6,Test Acoustic English,Artist F,english,english folk,nostalgic;warm,0.38,82,0.72,0.44,0.88,2017,A warm folk track with fingerpicked guitar and nostalgic lyrical imagery.

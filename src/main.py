@@ -1,103 +1,116 @@
 """
-Command line runner for the Music Recommender Simulation.
+Tuneweave CLI entry point.
+Run with: python -m src.main
 """
 
-from .recommender import load_songs, recommend_songs
+import sys
+from pathlib import Path
 
 
-def print_recommendations(recommendations, user_prefs: dict, k: int) -> None:
-    genre = user_prefs.get("genre", "?")
-    mood  = user_prefs.get("mood", "?")
-    energy = user_prefs.get("energy", "?")
+def _banner():
+    print("\n" + "=" * 60)
+    print("  Tuneweave — cross-lingual music recommender")
+    print("=" * 60)
 
+
+def _print_recommendations(recs, turn: int) -> None:
+    print(f"\n── Turn {turn} picks ─────────────────────────────────────────")
+    for i, rec in enumerate(recs, 1):
+        s = rec.song
+        tags = ", ".join(s.mood_tags[:3])
+        print(f"\n  {i}. {s.title}  —  {s.artist}")
+        print(f"     [{s.language} · {s.genre} · {s.year or '?'}]  |  mood: {tags}")
+        print(f"     ↳ {rec.explanation}")
     print()
-    print("=" * 60)
-    print("  MUSIC RECOMMENDER SIMULATION")
-    print("=" * 60)
-    print(f"  Profile  :  genre={genre}  |  mood={mood}  |  energy={energy}")
-    print(f"  Showing  :  top {k} recommendations")
-    print("=" * 60)
-
-    for rank, (song, score, explanation) in enumerate(recommendations, start=1):
-        bar_len = int(score * 20)
-        bar = "#" * bar_len + "-" * (20 - bar_len)
-
-        print()
-        print(f"  #{rank}  {song['title']}  —  {song['artist']}")
-        print(f"       Genre: {song['genre']:<14}  Mood: {song['mood']:<12}  Energy: {song['energy']:.2f}  BPM: {int(song['tempo_bpm'])}")
-        print(f"       Score: {score:.4f}  [{bar}]")
-        print(f"       Why  : {explanation}")
-
-    print()
-    print("=" * 60)
-    print()
-
-
-PROFILES = [
-    # --- Standard profiles ---
-    {
-        "label":          "High-Energy Pop",
-        "genre":          "pop",
-        "mood":           "happy",
-        "energy":         0.85,
-        "likes_acoustic": False,
-    },
-    {
-        "label":          "Chill Lofi",
-        "genre":          "lofi",
-        "mood":           "chill",
-        "energy":         0.38,
-        "likes_acoustic": True,
-    },
-    {
-        "label":          "Deep Intense Rock",
-        "genre":          "rock",
-        "mood":           "intense",
-        "energy":         0.90,
-        "likes_acoustic": False,
-    },
-    # --- Adversarial / edge case profiles ---
-    {
-        "label":          "Conflicting: High Energy + Melancholic Mood",
-        "genre":          "alternative",
-        "mood":           "melancholic",
-        "energy":         0.92,
-        "likes_acoustic": False,
-    },
-    {
-        "label":          "Ghost Genre: Genre Not in Catalog",
-        "genre":          "k-pop",
-        "mood":           "happy",
-        "energy":         0.80,
-        "likes_acoustic": False,
-    },
-    {
-        "label":          "Extremes: Maximum Acoustic + Peaceful Ambient",
-        "genre":          "ambient",
-        "mood":           "peaceful",
-        "energy":         0.15,
-        "likes_acoustic": True,
-    },
-    {
-        "label":          "Contradictory Acoustic: Likes Acoustic + Metal Genre",
-        "genre":          "metal",
-        "mood":           "intense",
-        "energy":         0.95,
-        "likes_acoustic": True,
-    },
-]
 
 
 def main() -> None:
-    songs = load_songs("data/songs.csv")
-    k = 5
-    for profile in PROFILES:
-        user_prefs = {k: v for k, v in profile.items() if k != "label"}
-        label = profile["label"]
-        print(f"\n{'#' * 60}")
-        print(f"  PROFILE: {label}")
-        recommendations = recommend_songs(user_prefs, songs, k=k)
-        print_recommendations(recommendations, user_prefs, k)
+    """
+    1. Load .env, init LLMClient, load catalog + embeddings.
+    2. Prompt: "What are you in the mood for?"
+    3. Run Session.start, print results.
+    4. Loop up to 2 more turns: prompt for refinement, run Session.refine.
+    5. On exit, print session summary.
+    """
+    from dotenv import load_dotenv
+    load_dotenv()
+
+    from src.catalog import load_songs
+    from src.embeddings import load_embeddings
+    from src.llm_client import LLMClient
+    from src.logger import save_session, setup_logger
+    from src.session import Session
+
+    setup_logger()
+    _banner()
+
+    catalog_path = Path("data/songs.csv")
+    embeddings_path = Path("data/embeddings.pkl")
+
+    if not embeddings_path.exists():
+        print(
+            "\n[ERROR] data/embeddings.pkl not found.\n"
+            "Build it first:\n"
+            "  python scripts/build_embeddings.py\n"
+        )
+        sys.exit(1)
+
+    print("\nLoading catalog and embeddings...")
+    catalog = load_songs(str(catalog_path))
+    embeddings = load_embeddings(str(embeddings_path))
+
+    from sentence_transformers import SentenceTransformer
+    from src.config import EMBED_MODEL_NAME
+    embed_model = SentenceTransformer(EMBED_MODEL_NAME)
+
+    client = LLMClient()
+    session = Session(catalog, embeddings, embed_model, client)
+
+    # ── Turn 1 ────────────────────────────────────────────────────────────────
+    print(f"\n{len(catalog)} songs loaded.\n")
+    print("What are you in the mood for?")
+    print("(e.g. 'chill Telugu songs for studying', 'only Hindi romantic', 'upbeat workout music')\n")
+
+    try:
+        query = input("> ").strip()
+    except (EOFError, KeyboardInterrupt):
+        print("\nGoodbye!")
+        return
+
+    if not query:
+        print("No input — goodbye!")
+        return
+
+    print("\nSearching...\n")
+    recs = session.start(query)
+    _print_recommendations(recs, turn=1)
+
+    transcript = [{"turn": 1, "input": query, "picks": [r.song.title for r in recs]}]
+
+    # ── Refinement loop ───────────────────────────────────────────────────────
+    while not session.is_complete():
+        print("Want to refine? (Enter to skip / 'quit' to exit)")
+        print("e.g. 'more acoustic', 'not #1', 'only Telugu', 'something sadder'\n")
+        try:
+            feedback = input("> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            break
+
+        if not feedback or feedback.lower() in {"quit", "q", "exit", "done", "no"}:
+            break
+
+        print("\nRefining...\n")
+        recs = session.refine(feedback)
+        turn = session.state().turn
+        _print_recommendations(recs, turn=turn)
+        transcript.append({"turn": turn, "input": feedback, "picks": [r.song.title for r in recs]})
+
+    # ── Summary ───────────────────────────────────────────────────────────────
+    print("=" * 60)
+    print("  Session complete. Enjoy the music!")
+    print("=" * 60 + "\n")
+
+    save_session({"initial_query": query, "turns": transcript})
 
 
 if __name__ == "__main__":
