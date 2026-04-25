@@ -172,7 +172,7 @@ pytest
 
 ![Session 1 Turn 1 — English energetic beats](assets/example1_1.png)
 
-**Turn 2** — refinement "not 1" removes Who Says and surfaces a fresh pick:
+**Turn 2** — refinement "not 2" removes Faded and surfaces a fresh pick:
 
 ![Session 1 Turn 2 — excluding pick 1](assets/example1_2.png)
 
@@ -187,10 +187,6 @@ pytest
 **Turn 2** — refinement "not lana del rey" removes both Lana Del Rey songs and introduces cross-lingual picks:
 
 ![Session 2 Turn 2 — excluding Lana Del Rey](assets/example2_2.png)
-
-**Turn 3** — refinement "include 2 Telugu songs" triggers language diversification, surfacing Telugu classical and film tracks alongside the existing picks:
-
-![Session 2 Turn 3 — Telugu diversification](assets/example2_3.png)
 
 ---
 
