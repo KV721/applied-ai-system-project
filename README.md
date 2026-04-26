@@ -275,7 +275,7 @@ The hardest prompt to get right was the refinement parser. The core challenge: "
 
 ## Demo
 
-_To be added._
+[Loom Video](https://www.loom.com/share/8cee810a6c3a4111aadfb423077498a4)
 
 ---
 
